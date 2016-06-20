@@ -28,40 +28,8 @@
 # -----------------------
 
 BOOST_VER1=1
-BOOST_VER2=53
+BOOST_VER2=58
 BOOST_VER3=0
-register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.55.0, 1.54.0, 1.53.0, 1.49.0, 1.48.0, 1.45.0}, default is 1.53.0."
-boost_version()
-{
-  if [ "$1" = "1.55.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=55
-    BOOST_VER3=0
-  elif [ "$1" = "1.54.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=54
-    BOOST_VER3=0
-  elif [ "$1" = "1.53.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=53
-    BOOST_VER3=0
-  elif [ "$1" = "1.49.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=49
-    BOOST_VER3=0
-  elif [ "$1" = "1.48.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=48
-    BOOST_VER3=0
-  elif [ "$1" = "1.45.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=45
-    BOOST_VER3=0
-  else
-    echo "Unsupported boost version '$1'."
-    exit 1
-  fi
-}
 
 register_option "--toolchain=<toolchain>" select_toolchain "Select a toolchain. To see available execute ls -l ANDROID_NDK/toolchains."
 select_toolchain () {
@@ -83,7 +51,6 @@ do_download ()
 }
 
 #LIBRARIES=--with-libraries=date_time,filesystem,program_options,regex,signals,system,thread,iostreams,locale
-LIBRARIES=
 register_option "--with-libraries=<list>" do_with_libraries "Comma separated list of libraries to build."
 do_with_libraries () { 
   for lib in $(echo $1 | tr ',' '\n') ; do LIBRARIES="--with-$lib ${LIBRARIES}"; done 
@@ -195,82 +162,9 @@ case "$HOST_OS" in
         PlatformOS=linux
 esac
 
-NDK_RELEASE_FILE=$AndroidNDKRoot"/RELEASE.TXT"
-if [ -f "${NDK_RELEASE_FILE}" ]; then
-    NDK_RN=`cat $NDK_RELEASE_FILE | sed 's/^r\(.*\)$/\1/g'`
-elif [ -n "${AndroidSourcesDetected}" ]; then
-    if [ -f "${ANDROID_BUILD_TOP}/ndk/docs/CHANGES.html" ]; then
-        NDK_RELEASE_FILE="${ANDROID_BUILD_TOP}/ndk/docs/CHANGES.html"
-        NDK_RN=`grep "android-ndk-" "${NDK_RELEASE_FILE}" | head -1 | sed 's/^.*r\(.*\)$/\1/'`
-    elif [ -f "${ANDROID_BUILD_TOP}/ndk/docs/text/CHANGES.text" ]; then
-        NDK_RELEASE_FILE="${ANDROID_BUILD_TOP}/ndk/docs/text/CHANGES.text"
-        NDK_RN=`grep "android-ndk-" "${NDK_RELEASE_FILE}" | head -1 | sed 's/^.*r\(.*\)$/\1/'`
-    else
-        dump "ERROR: can not find ndk version"
-        exit 1
-    fi
-else
-    dump "ERROR: can not find ndk version"
-    exit 1
-fi
-
-echo "Detected Android NDK version $NDK_RN"
-
-case "$NDK_RN" in
-	4*)
-		TOOLCHAIN=${TOOLCHAIN:-arm-eabi-4.4.0}
-		CXXPATH=$AndroidNDKRoot/build/prebuilt/$PlatformOS-x86/${TOOLCHAIN}/bin/arm-eabi-g++
-		TOOLSET=gcc-androidR4
-		;;
-	5*)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR5
-		;;
-	7-crystax-5.beta3)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR7crystax5beta3
-		;;
-	8)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8
-		;;
-	8b|8c|8d)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8b
-		;;
-	8e|9|9b|9c|9d|10c)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8e
-		;;
-	"8e (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8e
-		;;
-	"9 (64-bit)"|"9b (64-bit)"|"9c (64-bit)"|"9d (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8e
-		;;
-	"10 (64-bit)"|"10b (64-bit)"|"10c (64-bit)"|"10d (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR8e
-		;;
-	"10e (64-bit)"|"10e-rc4 (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.8}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
-		TOOLSET=gcc-androidR10e
-		;;
-	*)
-		echo "Undefined or not supported Android NDK version!"
-		exit 1
-esac
+TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.9}
+CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
+TOOLSET=gcc-android
 
 if [ -n "${AndroidSourcesDetected}" ]; then # Overwrite CXXPATH if we are building from Android sources
     CXXPATH="${ANDROID_TOOLCHAIN}/arm-linux-androideabi-g++"
@@ -350,7 +244,7 @@ then
   BOOST_VER=${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}
   PATCH_BOOST_DIR=$PROGDIR/patches/boost-${BOOST_VER}
 
-  cp configs/user-config-boost-${BOOST_VER}.jam $BOOST_DIR/tools/build/v2/user-config.jam
+  cp configs/user-config-boost-${BOOST_VER}.jam $BOOST_DIR/tools/build/src/user-config.jam
 
   for dir in $PATCH_BOOST_DIR; do
     if [ ! -d "$dir" ]; then
@@ -414,7 +308,11 @@ echo "Building boost for android"
   cxxflags=""
   for flag in $CXXFLAGS; do cxxflags="$cxxflags cxxflags=$flag"; done
 
+  parallel_build=''
+  if [ $HOST_OS = 'linux' ]; then parallel_build=-j`nproc`; fi
+
   { ./bjam -q                         \
+         $parallel_build              \
          target-os=linux              \
          toolset=$TOOLSET             \
          $cxxflags                    \
@@ -425,6 +323,9 @@ echo "Building boost for android"
          -sICU_PATH=`pwd`/../libiconv-libicu-android/armeabi \
          --prefix="./../$BUILD_DIR/"  \
          $LIBRARIES                   \
+         --without-context \
+         --without-coroutine \
+         --without-python \
          install 2>&1                 \
          || { dump "ERROR: Failed to build boost for android!" ; exit 1 ; }
   } | tee -a $PROGDIR/build.log
