@@ -490,6 +490,8 @@ echo "Building boost for android for $ARCH"
       unset WITHOUT_LIBRARIES
   fi
 
+  ERROR=no
+
   { ./bjam -q                         \
          -j$NCPU                      \
          target-os=${TARGET_OS}       \
@@ -507,13 +509,17 @@ echo "Building boost for android for $ARCH"
          $LIBRARIES                   \
          $LIBRARIES_BROKEN            \
          install 2>&1                 \
-         || { dump "ERROR: Failed to build boost for android for $ARCH!" ; rm -rf ./../$BUILD_DIR/out/$ARCH ; exit 1 ; }
+         || { dump "ERROR: Failed to build boost for android for $ARCH!";
+              rm -rf ./../$BUILD_DIR/out/$ARCH;
+              ERROR=yes ; }
   } | tee -a $PROGDIR/build.log
 
   # PIPESTATUS variable is defined only in Bash, and we are using /bin/sh, which is not Bash on newer Debian/Ubuntu
 )
 
-dump "Done!"
+if [ "$ERROR" = yes ]; then
+    exit 1
+fi
 
 if [ $PREFIX ]; then
     echo "Prefix set, copying files to $PREFIX"
