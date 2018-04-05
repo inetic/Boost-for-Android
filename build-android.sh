@@ -490,15 +490,18 @@ echo "Building boost for android for $ARCH"
       unset WITHOUT_LIBRARIES
   fi
 
+  if [ "$ARCH" = "armeabi-v7a" ]; then
+      # See <https://github.com/moritz-wundke/Boost-for-Android/issues/130>.
+      ASM_PROPS="architecture=arm abi=aapcs binary-format=elf"
+  fi
+
   ERROR=no
 
   { ./bjam -q                         \
          -j$NCPU                      \
          target-os=${TARGET_OS}       \
          toolset=${TOOLSET_ARCH}      \
-         architecture=arm             \
-         abi=aapcs                    \
-         binary-format=elf            \
+         $ASM_PROPS                   \
          $cflags                      \
          $cxxflags                    \
          link=static                  \
